@@ -1,0 +1,45 @@
+<script>
+    // Coordinates of a reference point at the Ukraine border (e.g., Lviv)
+    const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const toRadians = (deg) => deg * (Math.PI / 180);
+        const R = 6371; // Radius of the Earth in km
+
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+
+                const distance = calculateDistance(
+                    userLat,
+                    userLon,
+                    warZoneCoords.lat,
+                    warZoneCoords.lon
+                ).toFixed(2);
+
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("distance").style.display = "block";
+                document.getElementById("distance").textContent = `${distance} km`;
+            },
+            (error) => {
+                document.getElementById("loading").textContent = "Unable to retrieve your location.";
+            }
+        );
+    } else {
+        document.getElementById("loading").textContent = "Geolocation is not supported by your browser.";
+    }
+</script>
