@@ -75,10 +75,10 @@
                 document.getElementById('distance').style.display = 'block';
                 document.getElementById('distance').textContent = `Straight-line distance: ${distance} km`;
 
-               const map = new mapboxgl.Map({
+             const map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/outdoors-v11', // Alternative style
-    center: [userLon, userLat],
+    style: 'mapbox://styles/mapbox/streets-v11',
+    center: [30.5234, 50.4501], // Coordinates for Kyiv
     zoom: 6
 });
 
