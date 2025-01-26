@@ -48,10 +48,9 @@
 
         const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
 
-        // Function to calculate straight-line distance
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const toRadians = (deg) => deg * (Math.PI / 180);
-            const R = 6371; // Earth's radius in km
+            const R = 6371;
 
             const dLat = toRadians(lat2 - lat1);
             const dLon = toRadians(lon2 - lon1);
@@ -65,7 +64,6 @@
             return R * c;
         }
 
-        // Main function to handle map and distance
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const userLat = position.coords.latitude;
@@ -73,12 +71,10 @@
 
                 document.getElementById('loading').style.display = 'none';
 
-                // Calculate straight-line distance
                 const distance = calculateDistance(userLat, userLon, warZoneCoords.lat, warZoneCoords.lon).toFixed(2);
                 document.getElementById('distance').style.display = 'block';
                 document.getElementById('distance').textContent = `Straight-line distance: ${distance} km`;
 
-                // Initialize the map
                 const map = new mapboxgl.Map({
                     container: 'map',
                     style: 'mapbox://styles/mapbox/streets-v11',
@@ -86,7 +82,6 @@
                     zoom: 6
                 });
 
-                // Add markers
                 new mapboxgl.Marker({ color: 'blue' })
                     .setLngLat([userLon, userLat])
                     .setPopup(new mapboxgl.Popup().setHTML('<h3>Your Location</h3>'))
@@ -97,11 +92,11 @@
                     .setPopup(new mapboxgl.Popup().setHTML('<h3>Ukraine Border</h3>'))
                     .addTo(map);
 
-                // Draw line between the user's location and the Ukraine border
                 const lineCoordinates = [
                     [userLon, userLat],
                     [warZoneCoords.lon, warZoneCoords.lat]
                 ];
+
                 map.on('load', () => {
                     map.addSource('line', {
                         type: 'geojson',
