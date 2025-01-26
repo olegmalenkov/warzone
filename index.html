@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distance and Travel Time to War Zone</title>
+    <title>Driving Time to War Zone</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,7 +20,7 @@
             text-align: center;
             padding: 20px;
         }
-        .distance, .duration {
+        .duration {
             font-size: 1.5rem;
             font-weight: bold;
         }
@@ -36,75 +36,69 @@
 </head>
 <body>
     <div class="container">
-        <h1>Distance and Travel Time to the Ukraine Border</h1>
+        <h1>Driving Time to the Ukraine Border</h1>
         <p id="loading">Calculating your location and route...</p>
-        <p id="distance" class="distance" style="display: none;"></p>
         <p id="duration" class="duration" style="display: none;"></p>
         <div id="map"></div>
     </div>
 
-   <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
-<script>
-    mapboxgl.accessToken = 'pk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmR5ZDBoNzBjN3QybnF3bnVpODY5NGgifQ.NHqG5o1KSbk0U9ngeCLenA';
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmR5ZDBoNzBjN3QybnF3bnVpODY5NGgifQ.NHqG5o1KSbk0U9ngeCLenA';
 
-    const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
+        const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
 
-    // Fetch driving time using Mapbox Directions API
-    function fetchDrivingTime(userLat, userLon, warZoneLat, warZoneLon) {
-        const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLon},${userLat};${warZoneLon},${warZoneLat}?access_token=${mapboxgl.accessToken}&geometries=geojson`;
+        function fetchDrivingTime(userLat, userLon, warZoneLat, warZoneLon) {
+            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLon},${userLat};${warZoneLon},${warZoneLat}?access_token=${mapboxgl.accessToken}&geometries=geojson`;
 
-        fetch(directionsUrl)
-            .then(response => response.json())
-            .then(data => {
-                if (data.routes && data.routes.length > 0) {
-                    const durationInSeconds = data.routes[0].duration;
-                    const durationInHours = (durationInSeconds / 3600).toFixed(2);
-                    document.getElementById('duration').style.display = 'block';
-                    document.getElementById('duration').textContent = `Driving time: ${durationInHours} hours`;
-                } else {
-                    document.getElementById('duration').textContent = 'Unable to calculate driving time.';
-                }
-            })
-            .catch(() => {
-                document.getElementById('duration').textContent = 'Error fetching driving time.';
+            fetch(directionsUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        const durationInSeconds = data.routes[0].duration;
+                        const durationInHours = (durationInSeconds / 3600).toFixed(2);
+                        document.getElementById('duration').style.display = 'block';
+                        document.getElementById('duration').textContent = `Driving time: ${durationInHours} hours`;
+                    } else {
+                        document.getElementById('duration').textContent = 'Unable to calculate driving time.';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('duration').textContent = 'Error fetching driving time.';
+                });
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+
+                document.getElementById('loading').style.display = 'none';
+
+                fetchDrivingTime(userLat, userLon, warZoneCoords.lat, warZoneCoords.lon);
+
+                const map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/streets-v11',
+                    center: [userLon, userLat],
+                    zoom: 6
+                });
+
+                new mapboxgl.Marker({ color: 'blue' })
+                    .setLngLat([userLon, userLat])
+                    .setPopup(new mapboxgl.Popup().setHTML('<h3>Your Location</h3>'))
+                    .addTo(map);
+
+                new mapboxgl.Marker({ color: 'red' })
+                    .setLngLat([warZoneCoords.lon, warZoneCoords.lat])
+                    .setPopup(new mapboxgl.Popup().setHTML('<h3>Ukraine Border</h3>'))
+                    .addTo(map);
+            }, () => {
+                document.getElementById('loading').textContent = 'Unable to retrieve your location.';
             });
-    }
-
-    // Main function to handle map and driving time
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const userLat = position.coords.latitude;
-            const userLon = position.coords.longitude;
-
-            document.getElementById('loading').style.display = 'none';
-
-            // Fetch driving time
-            fetchDrivingTime(userLat, userLon, warZoneCoords.lat, warZoneCoords.lon);
-
-            // Initialize the map
-            const map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: [userLon, userLat],
-                zoom: 6
-            });
-
-            // Add markers
-            new mapboxgl.Marker({ color: 'blue' })
-                .setLngLat([userLon, userLat])
-                .setPopup(new mapboxgl.Popup().setHTML('<h3>Your Location</h3>'))
-                .addTo(map);
-
-            new mapboxgl.Marker({ color: 'red' })
-                .setLngLat([warZoneCoords.lon, warZoneCoords.lat])
-                .setPopup(new mapboxgl.Popup().setHTML('<h3>Ukraine Border</h3>'))
-                .addTo(map);
-        }, () => {
-            document.getElementById('loading').textContent = 'Unable to retrieve your location.';
-        });
-    } else {
-        document.getElementById('loading').textContent = 'Geolocation is not supported by your browser.';
-    }
-</script>
+        } else {
+            document.getElementById('loading').textContent = 'Geolocation is not supported by your browser.';
+        }
+    </script>
 </body>
 </html>
