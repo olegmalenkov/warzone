@@ -48,6 +48,7 @@
 
         const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
 
+        // Fetch driving time using Mapbox Directions API
         function fetchDrivingTime(userLat, userLon, warZoneLat, warZoneLon) {
             const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLon},${userLat};${warZoneLon},${warZoneLat}?access_token=${mapboxgl.accessToken}&geometries=geojson`;
 
@@ -68,6 +69,7 @@
                 });
         }
 
+        // Main function to handle map and driving time
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const userLat = position.coords.latitude;
@@ -79,7 +81,7 @@
 
                 const map = new mapboxgl.Map({
                     container: 'map',
-                    style: 'mapbox://styles/mapbox/streets-v11',
+                    style: 'mapbox://styles/mapbox/light-v10', // Updated style
                     center: [userLon, userLat],
                     zoom: 6
                 });
