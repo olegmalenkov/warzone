@@ -24,15 +24,25 @@
             font-size: 2rem;
             font-weight: bold;
         }
+        #map {
+            height: 50vh;
+            width: 100%;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-F2kUFUSiCzafIhB9RKe22PSY8Xka3UlWlT2DdYdF3A1u6l2DDHKl31xclqqTc8Yu" crossorigin="" />
 </head>
 <body>
     <div class="container">
         <h1>Distance to the Ukraine Border</h1>
         <p id="loading">Calculating your distance...</p>
         <p id="distance" class="distance" style="display: none;"></p>
+        <div id="map"></div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-n3DbjNwMH0KPjxgvj9QOjp2qD9OVlUioSukY3bEdf9hgTd9shhi6MZ8O30smPR7z" crossorigin=""></script>
     <script>
         const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
 
@@ -68,6 +78,30 @@
                     document.getElementById("loading").style.display = "none";
                     document.getElementById("distance").style.display = "block";
                     document.getElementById("distance").textContent = `${distance} km`;
+
+                    // Initialize the map
+                    const map = L.map('map').setView([userLat, userLon], 6);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    // Add a marker for the user location
+                    L.marker([userLat, userLon]).addTo(map)
+                        .bindPopup('Your Location')
+                        .openPopup();
+
+                    // Add a marker for the war zone
+                    L.marker([warZoneCoords.lat, warZoneCoords.lon]).addTo(map)
+                        .bindPopup('Ukraine Border')
+                        .openPopup();
+
+                    // Draw a line between the user and the war zone
+                    const latlngs = [
+                        [userLat, userLon],
+                        [warZoneCoords.lat, warZoneCoords.lon]
+                    ];
+                    const polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
                 },
                 (error) => {
                     document.getElementById("loading").textContent = "Unable to retrieve your location.";
