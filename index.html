@@ -42,7 +42,7 @@
         <div id="map"></div>
     </div>
 
-   <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 <script>
     mapboxgl.accessToken = 'pk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmR5ZDBoNzBjN3QybnF3bnVpODY5NGgifQ.NHqG5o1KSbk0U9ngeCLenA';
 
@@ -64,6 +64,27 @@
         return R * c;
     }
 
+    function fetchDrivingTime(userLat, userLon, warZoneLat, warZoneLon) {
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLon},${userLat};${warZoneLon},${warZoneLat}?access_token=${mapboxgl.accessToken}&geometries=geojson`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.routes && data.routes.length > 0) {
+                    const durationInSeconds = data.routes[0].duration;
+                    const durationInHours = (durationInSeconds / 3600).toFixed(2);
+
+                    document.getElementById("duration").style.display = "block";
+                    document.getElementById("duration").textContent = `Approximate driving time: ${durationInHours} hours`;
+                } else {
+                    document.getElementById("duration").textContent = "Could not calculate driving time.";
+                }
+            })
+            .catch(() => {
+                document.getElementById("duration").textContent = "Error fetching driving time.";
+            });
+    }
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -79,7 +100,10 @@
 
                 document.getElementById("loading").style.display = "none";
                 document.getElementById("distance").style.display = "block";
-                document.getElementById("distance").textContent = `${distance} km`;
+                document.getElementById("distance").textContent = `Straight-line distance: ${distance} km`;
+
+                // Fetch and display driving time
+                fetchDrivingTime(userLat, userLon, warZoneCoords.lat, warZoneCoords.lon);
 
                 // Initialize Mapbox map
                 const map = new mapboxgl.Map({
