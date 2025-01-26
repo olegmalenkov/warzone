@@ -44,7 +44,7 @@
 
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
     <script>
-        mapboxgl.accessToken = 'sk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmUwaWxiYjBxemsya3IydjY0YXNkOGMifQ.FpJUx0_ZqiJcxsPSC7QAkA';
+        mapboxgl.accessToken = 'pk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmUwdzdiaDB5MWYybHM3b2VqOHVlY3EifQ.hlytSZKABeUDcTL22YmKHA';
 
         const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
 
@@ -75,12 +75,12 @@
                 document.getElementById('distance').style.display = 'block';
                 document.getElementById('distance').textContent = `Straight-line distance: ${distance} km`;
 
-             const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [30.5234, 50.4501], // Coordinates for Kyiv
-    zoom: 6
-});
+                const map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/streets-v11',
+                    center: [userLon, userLat],
+                    zoom: 6
+                });
 
                 new mapboxgl.Marker({ color: 'blue' })
                     .setLngLat([userLon, userLat])
