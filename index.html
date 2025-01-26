@@ -42,74 +42,107 @@
         <div id="map"></div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-n3DbjNwMH0KPjxgvj9QOjp2qD9OVlUioSukY3bEdf9hgTd9shhi6MZ8O30smPR7z" crossorigin=""></script>
-    <script>
-        const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
+   <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmR5NzQzODExejQybXBhaWw0YmdlMHgifQ.cRaGm-gZE471TxuQCNpL-Q';
 
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const toRadians = (deg) => deg * (Math.PI / 180);
-            const R = 6371;
+    const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
 
-            const dLat = toRadians(lat2 - lat1);
-            const dLon = toRadians(lon2 - lon1);
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const toRadians = (deg) => deg * (Math.PI / 180);
+        const R = 6371;
 
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
 
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLon = position.coords.longitude;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
 
-                    const distance = calculateDistance(
-                        userLat,
-                        userLon,
-                        warZoneCoords.lat,
-                        warZoneCoords.lon
-                    ).toFixed(2);
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
 
-                    document.getElementById("loading").style.display = "none";
-                    document.getElementById("distance").style.display = "block";
-                    document.getElementById("distance").textContent = `${distance} km`;
+                const distance = calculateDistance(
+                    userLat,
+                    userLon,
+                    warZoneCoords.lat,
+                    warZoneCoords.lon
+                ).toFixed(2);
 
-                    // Initialize the map
-                    const map = L.map('map').setView([userLat, userLon], 6);
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("distance").style.display = "block";
+                document.getElementById("distance").textContent = `${distance} km`;
 
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    }).addTo(map);
+                // Initialize Mapbox map
+                const map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/streets-v11',
+                    center: [userLon, userLat],
+                    zoom: 6
+                });
 
-                    // Add a marker for the user location
-                    L.marker([userLat, userLon]).addTo(map)
-                        .bindPopup('Your Location')
-                        .openPopup();
+                // Add user location marker
+                new mapboxgl.Marker({ color: 'blue' })
+                    .setLngLat([userLon, userLat])
+                    .setPopup(new mapboxgl.Popup().setHTML('<h3>Your Location</h3>'))
+                    .addTo(map);
 
-                    // Add a marker for the war zone
-                    L.marker([warZoneCoords.lat, warZoneCoords.lon]).addTo(map)
-                        .bindPopup('Ukraine Border')
-                        .openPopup();
+                // Add war zone marker
+                new mapboxgl.Marker({ color: 'red' })
+                    .setLngLat([warZoneCoords.lon, warZoneCoords.lat])
+                    .setPopup(new mapboxgl.Popup().setHTML('<h3>Ukraine Border</h3>'))
+                    .addTo(map);
 
-                    // Draw a line between the user and the war zone
-                    const latlngs = [
-                        [userLat, userLon],
-                        [warZoneCoords.lat, warZoneCoords.lon]
-                    ];
-                    const polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
-                },
-                (error) => {
-                    document.getElementById("loading").textContent = "Unable to retrieve your location.";
-                }
-            );
-        } else {
-            document.getElementById("loading").textContent = "Geolocation is not supported by your browser.";
-        }
-    </script>
+                // Draw a line between user location and war zone
+                const route = {
+                    type: 'FeatureCollection',
+                    features: [
+                        {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: [
+                                    [userLon, userLat],
+                                    [warZoneCoords.lon, warZoneCoords.lat]
+                                ]
+                            }
+                        }
+                    ]
+                };
+
+                map.on('load', () => {
+                    map.addSource('route', {
+                        type: 'geojson',
+                        data: route
+                    });
+
+                    map.addLayer({
+                        id: 'route',
+                        type: 'line',
+                        source: 'route',
+                        layout: {},
+                        paint: {
+                            'line-color': '#ff0000',
+                            'line-width': 4
+                        }
+                    });
+                });
+            },
+            (error) => {
+                document.getElementById("loading").textContent = "Unable to retrieve your location.";
+            }
+        );
+    } else {
+        document.getElementById("loading").textContent = "Geolocation is not supported by your browser.";
+    }
+</script>
 </body>
 </html>
