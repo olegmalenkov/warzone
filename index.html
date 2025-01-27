@@ -18,34 +18,28 @@
             min-height: 100vh;
             background-color: #f5f5f5;
         }
-        .container {
-            text-align: center;
-            padding: 20px;
-        }
         #map {
-            height: 50vh;
             width: 100vw;
-            margin-top: 20px;
+            height: 50vh;
             border: 1px solid #ddd;
             border-radius: 8px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Distance to the Ukraine Border</h1>
-        <div id="map"></div>
-    </div>
+    <h1>Distance to the Ukraine Border</h1>
+    <div id="map"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Replace this with your valid Mapbox token
             mapboxgl.accessToken = 'sk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmV5cmEyczFibXAyaXFxa3FreDB4cnUifQ.3q_tNfVLtL69IxUBHJrPoA';
 
             const map = new mapboxgl.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11',
-                center: [30.5234, 50.4501], // Kyiv coordinates as an example
-                zoom: 5
+                center: [30.5234, 50.4501], // Kyiv coordinates
+                zoom: 6
             });
         });
     </script>
