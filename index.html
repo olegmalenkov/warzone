@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distance to Ukraine Border</title>
+    <title>How Fast Russian Occupation Forces Get to My Place</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,8 +31,7 @@
     </style>
 </head>
 <body>
-    <h1><h1>How Fast Russian Occupation Forces Get to My Place</h1>
-</h1>
+    <h1>How Fast Russian Occupation Forces Get to My Place</h1>
     <div class="controls">
         <button id="straightLineBtn">Straight Line Distance</button>
         <button id="drivingBtn">Driving Directions</button>
@@ -40,12 +39,23 @@
     <div id="map"></div>
     <div class="info">
         <p id="distance">Calculating distance...</p>
+        <p id="russianPopulation">Loading Russian population data...</p>
     </div>
 
     <script>
         let map, userLocationMarker, borderMarker, directionsRenderer;
         const borderLocation = { lat: 49.8397, lng: 24.0297 }; // Ukraine border coordinates
         const apiKey = "AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek";
+
+        // Mock Russian population data
+        const russianPopulationData = {
+            "Ukraine": 91_000,
+            "Poland": 85_000,
+            "Germany": 3_100_000,
+            "United Kingdom": 66_000,
+            "United States": 3_200_000,
+            "Other": "Data unavailable"
+        };
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -77,6 +87,9 @@
 
                     // Default to straight-line distance
                     calculateStraightLineDistance(userLocation);
+
+                    // Determine user's country
+                    getUserCountry(userLocation.lat, userLocation.lng);
 
                     // Add event listeners for buttons
                     document.getElementById('straightLineBtn').addEventListener('click', () => {
@@ -150,6 +163,26 @@
                 Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
+        }
+
+        function getUserCountry(lat, lng) {
+            const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+
+            fetch(geocodingUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const country = data.results[0].address_components.find(component =>
+                        component.types.includes("country")
+                    ).long_name;
+
+                    // Fetch Russian population for the user's country
+                    const population = russianPopulationData[country] || russianPopulationData["Other"];
+                    document.getElementById('russianPopulation').textContent = `Estimated Russian Population in ${country}: ${population}`;
+                })
+                .catch(error => {
+                    document.getElementById('russianPopulation').textContent = "Unable to determine your country's Russian population.";
+                    console.error("Error fetching geocoding data:", error);
+                });
         }
 
         function resetMap() {
