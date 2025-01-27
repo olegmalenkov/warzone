@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driving Distance to Ukraine Border</title>
+    <title>Distance to Ukraine Border</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,34 +22,44 @@
             border: 1px solid #ddd;
             border-radius: 8px;
         }
-        .info {
+        .controls {
             margin: 20px;
+        }
+        .info {
             text-align: center;
         }
     </style>
 </head>
 <body>
-    <h1>Driving Distance to Ukraine Border</h1>
+    <h1>Distance to Ukraine Border</h1>
+    <div class="controls">
+        <button id="straightLineBtn">Straight Line Distance</button>
+        <button id="drivingBtn">Driving Directions</button>
+    </div>
     <div id="map"></div>
     <div class="info">
-        <p id="distance">Calculating driving distance...</p>
+        <p id="distance">Calculating distance...</p>
     </div>
 
     <script>
-        function initMap() {
-            const borderLocation = { lat: 49.8397, lng: 24.0297 }; // Ukraine border coordinates
+        let map, userLocationMarker, borderMarker, directionsRenderer;
+        const borderLocation = { lat: 49.8397, lng: 24.0297 }; // Ukraine border coordinates
+        const apiKey = "AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek";
 
-            const map = new google.maps.Map(document.getElementById('map'), {
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
                 center: borderLocation,
                 zoom: 6
             });
 
-            new google.maps.Marker({
+            // Add a marker for the border
+            borderMarker = new google.maps.Marker({
                 position: borderLocation,
                 map,
-                title: 'Ukraine Border'
+                title: "Ukraine Border"
             });
 
+            // Get the user's current location
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const userLocation = {
@@ -57,42 +67,97 @@
                         lng: position.coords.longitude
                     };
 
-                    new google.maps.Marker({
+                    // Add a marker for the user's location
+                    userLocationMarker = new google.maps.Marker({
                         position: userLocation,
                         map,
-                        title: 'Your Location'
+                        title: "Your Location"
                     });
 
-                    const directionsService = new google.maps.DirectionsService();
-                    const directionsRenderer = new google.maps.DirectionsRenderer();
-                    directionsRenderer.setMap(map);
+                    // Default to straight-line distance
+                    calculateStraightLineDistance(userLocation);
 
-                    const directionsRequest = {
-                        origin: userLocation,
-                        destination: borderLocation,
-                        travelMode: 'DRIVING'
-                    };
+                    // Add event listeners for buttons
+                    document.getElementById('straightLineBtn').addEventListener('click', () => {
+                        resetMap();
+                        calculateStraightLineDistance(userLocation);
+                    });
 
-                    directionsService.route(directionsRequest, (result, status) => {
-                        if (status === 'OK') {
-                            const distanceText = result.routes[0].legs[0].distance.text;
-                            const durationText = result.routes[0].legs[0].duration.text;
-
-                            document.getElementById('distance').textContent = `Driving Distance: ${distanceText}, Duration: ${durationText}`;
-                            directionsRenderer.setDirections(result);
-                        } else {
-                            document.getElementById('distance').textContent = 'Unable to calculate driving distance.';
-                            console.error('Directions request failed due to:', status);
-                        }
+                    document.getElementById('drivingBtn').addEventListener('click', () => {
+                        resetMap();
+                        calculateDrivingDistance(userLocation);
                     });
                 }, () => {
-                    document.getElementById('distance').textContent = 'Unable to retrieve your location.';
+                    document.getElementById('distance').textContent = "Unable to retrieve your location.";
                 });
             } else {
-                document.getElementById('distance').textContent = 'Geolocation is not supported by this browser.';
+                document.getElementById('distance').textContent = "Geolocation is not supported by this browser.";
             }
         }
+
+        function calculateStraightLineDistance(userLocation) {
+            const distance = haversineDistance(userLocation, borderLocation);
+            document.getElementById('distance').textContent = `Straight Line Distance: ${distance.toFixed(2)} km`;
+
+            // Add a straight line on the map
+            new google.maps.Polyline({
+                path: [userLocation, borderLocation],
+                geodesic: true,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+                map: map
+            });
+        }
+
+        function calculateDrivingDistance(userLocation) {
+            const directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+
+            directionsService.route(
+                {
+                    origin: userLocation,
+                    destination: borderLocation,
+                    travelMode: "DRIVING"
+                },
+                (result, status) => {
+                    if (status === "OK") {
+                        const distanceText = result.routes[0].legs[0].distance.text;
+                        const durationText = result.routes[0].legs[0].duration.text;
+
+                        document.getElementById('distance').textContent = `Driving Distance: ${distanceText}, Duration: ${durationText}`;
+                        directionsRenderer.setDirections(result);
+                    } else {
+                        document.getElementById('distance').textContent = "Unable to calculate driving distance.";
+                        console.error("Directions request failed due to:", status);
+                    }
+                }
+            );
+        }
+
+        function haversineDistance(loc1, loc2) {
+            const toRad = angle => (angle * Math.PI) / 180;
+            const R = 6371; // Earth's radius in km
+            const dLat = toRad(loc2.lat - loc1.lat);
+            const dLng = toRad(loc2.lng - loc1.lng);
+            const lat1 = toRad(loc1.lat);
+            const lat2 = toRad(loc2.lat);
+
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function resetMap() {
+            if (directionsRenderer) {
+                directionsRenderer.setMap(null);
+            }
+            map.panTo(borderLocation);
+        }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek&callback=initMap&libraries=places" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek&callback=initMap" async defer></script>
 </body>
 </html>
