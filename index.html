@@ -102,78 +102,75 @@
             document.getElementById('loading').style.display = 'none';
 
             const updateDistanceAndRoute = () => {
-                map.on('load', () => {
-                    if (isDirectDistance) {
-                        const distance = calculateDistance(userLat, userLon, warZoneCoords.lat, warZoneCoords.lon).toFixed(2);
-                        document.getElementById('distance').textContent = `Straight-line distance: ${distance} km`;
+              map.on('load', () => {
+    if (isDirectDistance) {
+        const lineCoordinates = [
+            [userLon, userLat],
+            [warZoneCoords.lon, warZoneCoords.lat]
+        ];
 
-                        if (map.getLayer('route')) {
-                            map.removeLayer('route');
-                            map.removeSource('route');
+        // Add the straight-line distance
+        if (map.getLayer('route')) {
+            map.removeLayer('route');
+            map.removeSource('route');
+        }
+
+        map.addSource('line', {
+            type: 'geojson',
+            data: {
+                type: 'Feature',
+                geometry: {
+                    type: 'LineString',
+                    coordinates: lineCoordinates
+                }
+            }
+        });
+
+        map.addLayer({
+            id: 'line',
+            type: 'line',
+            source: 'line',
+            layout: {},
+            paint: {
+                'line-color': '#ff0000',
+                'line-width': 4
+            }
+        });
+    } else {
+        fetchDrivingRoute(userLat, userLon, (drivingDistance, route) => {
+            document.getElementById('distance').textContent = drivingDistance;
+
+            if (map.getLayer('line')) {
+                map.removeLayer('line');
+                map.removeSource('line');
+            }
+
+            if (route) {
+                map.addSource('route', {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: route
                         }
-
-                        const lineCoordinates = [
-                            [userLon, userLat],
-                            [warZoneCoords.lon, warZoneCoords.lat]
-                        ];
-
-                        map.addSource('line', {
-                            type: 'geojson',
-                            data: {
-                                type: 'Feature',
-                                geometry: {
-                                    type: 'LineString',
-                                    coordinates: lineCoordinates
-                                }
-                            }
-                        });
-
-                        map.addLayer({
-                            id: 'line',
-                            type: 'line',
-                            source: 'line',
-                            layout: {},
-                            paint: {
-                                'line-color': '#ff0000',
-                                'line-width': 4
-                            }
-                        });
-                    } else {
-                        fetchDrivingRoute(userLat, userLon, (drivingDistance, route) => {
-                            document.getElementById('distance').textContent = drivingDistance;
-
-                            if (map.getLayer('line')) {
-                                map.removeLayer('line');
-                                map.removeSource('line');
-                            }
-
-                            if (route) {
-                                map.addSource('route', {
-                                    type: 'geojson',
-                                    data: {
-                                        type: 'Feature',
-                                        geometry: {
-                                            type: 'LineString',
-                                            coordinates: route
-                                        }
-                                    }
-                                });
-
-                                map.addLayer({
-                                    id: 'route',
-                                    type: 'line',
-                                    source: 'route',
-                                    layout: {},
-                                    paint: {
-                                        'line-color': '#0000ff',
-                                        'line-width': 4
-                                    }
-                                });
-                            }
-                        });
                     }
                 });
-            };
+
+                map.addLayer({
+                    id: 'route',
+                    type: 'line',
+                    source: 'route',
+                    layout: {},
+                    paint: {
+                        'line-color': '#0000ff',
+                        'line-width': 4
+                    }
+                });
+            }
+        });
+    }
+});
 
             // Initialize the map
             map = new mapboxgl.Map({
