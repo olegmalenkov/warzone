@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Driving Distance to Ukraine Border</title>
+    <link rel="icon" href="data:,">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +28,8 @@
             text-align: center;
         }
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek" defer></script>
+    <!-- Load Google Maps API with async -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek&libraries=marker&v=beta&loading=async" defer></script>
 </head>
 <body>
     <h1>Driving Distance to Ukraine Border</h1>
@@ -46,8 +48,8 @@
                 zoom: 6
             });
 
-            // Add a marker for the border
-            new google.maps.Marker({
+            // Add an AdvancedMarkerElement for the border
+            new google.maps.marker.AdvancedMarkerElement({
                 position: borderLocation,
                 map,
                 title: 'Ukraine Border'
@@ -61,8 +63,8 @@
                         lng: position.coords.longitude
                     };
 
-                    // Add a marker for the user's location
-                    new google.maps.Marker({
+                    // Add an AdvancedMarkerElement for the user's location
+                    new google.maps.marker.AdvancedMarkerElement({
                         position: userLocation,
                         map,
                         title: 'Your Location'
@@ -70,6 +72,9 @@
 
                     // Calculate the driving distance
                     const directionsService = new google.maps.DirectionsService();
+                    const directionsRenderer = new google.maps.DirectionsRenderer();
+                    directionsRenderer.setMap(map);
+
                     const directionsRequest = {
                         origin: userLocation,
                         destination: borderLocation,
@@ -82,10 +87,6 @@
                             const durationText = result.routes[0].legs[0].duration.text;
 
                             document.getElementById('distance').textContent = `Driving Distance: ${distanceText}, Duration: ${durationText}`;
-
-                            // Render the route on the map
-                            const directionsRenderer = new google.maps.DirectionsRenderer();
-                            directionsRenderer.setMap(map);
                             directionsRenderer.setDirections(result);
                         } else {
                             document.getElementById('distance').textContent = 'Unable to calculate driving distance.';
