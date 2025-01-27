@@ -47,6 +47,7 @@
     mapboxgl.accessToken = 'pk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmUwdzdiaDB5MWYybHM3b2VqOHVlY3EifQ.hlytSZKABeUDcTL22YmKHA';
 
     const warZoneCoords = { lat: 49.8397, lon: 24.0297 };
+    let isDirectDistance = true;
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const toRadians = (deg) => deg * (Math.PI / 180);
@@ -64,6 +65,25 @@
         return R * c;
     }
 
+    function fetchDrivingDistance(userLat, userLon, callback) {
+        const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLon},${userLat};${warZoneCoords.lon},${warZoneCoords.lat}?access_token=${mapboxgl.accessToken}`;
+
+        fetch(directionsUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.routes && data.routes.length > 0) {
+                    const durationInSeconds = data.routes[0].duration;
+                    const durationInHours = (durationInSeconds / 3600).toFixed(2);
+                    callback(`Driving time: ${durationInHours} hours`);
+                } else {
+                    callback('Unable to calculate driving distance.');
+                }
+            })
+            .catch(() => {
+                callback('Error fetching driving distance.');
+            });
+    }
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
             const userLat = position.coords.latitude;
@@ -71,10 +91,18 @@
 
             document.getElementById('loading').style.display = 'none';
 
-            const distance = calculateDistance(userLat, userLon, warZoneCoords.lat, warZoneCoords.lon).toFixed(2);
-            document.getElementById('distance').style.display = 'block';
-            document.getElementById('distance').textContent = `Straight-line distance: ${distance} km`;
+            const updateDistance = () => {
+                if (isDirectDistance) {
+                    const distance = calculateDistance(userLat, userLon, warZoneCoords.lat, warZoneCoords.lon).toFixed(2);
+                    document.getElementById('distance').textContent = `Straight-line distance: ${distance} km`;
+                } else {
+                    fetchDrivingDistance(userLat, userLon, (drivingDistance) => {
+                        document.getElementById('distance').textContent = drivingDistance;
+                    });
+                }
+            };
 
+            // Initialize the map
             const map = new mapboxgl.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11',
@@ -120,6 +148,18 @@
                     }
                 });
             });
+
+            document.getElementById('distance').style.display = 'block';
+            updateDistance();
+
+            document.getElementById('toggleDistance').addEventListener('click', () => {
+                isDirectDistance = !isDirectDistance;
+                document.getElementById('toggleDistance').textContent = isDirectDistance
+                    ? 'Switch to Driving Distance'
+                    : 'Switch to Straight-line Distance';
+                updateDistance();
+            });
+
         }, () => {
             document.getElementById('loading').textContent = 'Unable to retrieve your location.';
         });
