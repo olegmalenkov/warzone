@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distance to War Zone</title>
+    <title>Driving Distance to Ukraine Border</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,35 +22,82 @@
             border: 1px solid #ddd;
             border-radius: 8px;
         }
+        .info {
+            margin: 20px;
+            text-align: center;
+        }
     </style>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek" defer></script>
 </head>
 <body>
-    <h1>Distance to the Ukraine Border</h1>
+    <h1>Driving Distance to Ukraine Border</h1>
     <div id="map"></div>
+    <div class="info">
+        <p id="distance">Calculating driving distance...</p>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const borderLocation = { lat: 49.8397, lng: 24.0297 }; // Ukraine border coordinates
+
             // Initialize the map
             const map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 50.4501, lng: 30.5234 }, // Kyiv coordinates
+                center: borderLocation,
                 zoom: 6
             });
 
-            // Add markers
-            const userMarker = new google.maps.Marker({
-                position: { lat: 51.509865, lng: -0.118092 }, // Example: London
+            // Add a marker for the border
+            new google.maps.Marker({
+                position: borderLocation,
                 map,
-                title: "Your Location"
+                title: 'Ukraine Border'
             });
 
-            const borderMarker = new google.maps.Marker({
-                position: { lat: 49.8397, lng: 24.0297 }, // Lviv (near Ukraine border)
-                map,
-                title: "Ukraine Border"
-            });
+            // Get the user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
 
-            // Optionally, add route or distance calculations here
+                    // Add a marker for the user's location
+                    new google.maps.Marker({
+                        position: userLocation,
+                        map,
+                        title: 'Your Location'
+                    });
+
+                    // Calculate the driving distance
+                    const directionsService = new google.maps.DirectionsService();
+                    const directionsRequest = {
+                        origin: userLocation,
+                        destination: borderLocation,
+                        travelMode: 'DRIVING'
+                    };
+
+                    directionsService.route(directionsRequest, (result, status) => {
+                        if (status === 'OK') {
+                            const distanceText = result.routes[0].legs[0].distance.text;
+                            const durationText = result.routes[0].legs[0].duration.text;
+
+                            document.getElementById('distance').textContent = `Driving Distance: ${distanceText}, Duration: ${durationText}`;
+
+                            // Render the route on the map
+                            const directionsRenderer = new google.maps.DirectionsRenderer();
+                            directionsRenderer.setMap(map);
+                            directionsRenderer.setDirections(result);
+                        } else {
+                            document.getElementById('distance').textContent = 'Unable to calculate driving distance.';
+                            console.error('Directions request failed due to:', status);
+                        }
+                    });
+                }, () => {
+                    document.getElementById('distance').textContent = 'Unable to retrieve your location.';
+                });
+            } else {
+                document.getElementById('distance').textContent = 'Geolocation is not supported by this browser.';
+            }
         });
     </script>
 </body>
