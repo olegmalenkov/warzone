@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Driving Distance to Ukraine Border</title>
-    <link rel="icon" href="data:,">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -28,8 +27,6 @@
             text-align: center;
         }
     </style>
-    <!-- Load Google Maps API with async -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek&libraries=marker&v=beta&loading=async" defer></script>
 </head>
 <body>
     <h1>Driving Distance to Ukraine Border</h1>
@@ -39,23 +36,20 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        function initMap() {
             const borderLocation = { lat: 49.8397, lng: 24.0297 }; // Ukraine border coordinates
 
-            // Initialize the map
             const map = new google.maps.Map(document.getElementById('map'), {
                 center: borderLocation,
                 zoom: 6
             });
 
-            // Add an AdvancedMarkerElement for the border
-            new google.maps.marker.AdvancedMarkerElement({
+            new google.maps.Marker({
                 position: borderLocation,
                 map,
                 title: 'Ukraine Border'
             });
 
-            // Get the user's current location
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(position => {
                     const userLocation = {
@@ -63,14 +57,12 @@
                         lng: position.coords.longitude
                     };
 
-                    // Add an AdvancedMarkerElement for the user's location
-                    new google.maps.marker.AdvancedMarkerElement({
+                    new google.maps.Marker({
                         position: userLocation,
                         map,
                         title: 'Your Location'
                     });
 
-                    // Calculate the driving distance
                     const directionsService = new google.maps.DirectionsService();
                     const directionsRenderer = new google.maps.DirectionsRenderer();
                     directionsRenderer.setMap(map);
@@ -99,7 +91,8 @@
             } else {
                 document.getElementById('distance').textContent = 'Geolocation is not supported by this browser.';
             }
-        });
+        }
     </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek&callback=initMap&libraries=places" async defer></script>
 </body>
 </html>
