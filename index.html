@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Distance to War Zone</title>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,6 +23,7 @@
             border-radius: 8px;
         }
     </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1_7ZBvxtueqYAqiO3lcGf0Ju_WSrlSek" defer></script>
 </head>
 <body>
     <h1>Distance to the Ukraine Border</h1>
@@ -32,15 +31,26 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Replace this with your valid Mapbox token
-            mapboxgl.accessToken = 'sk.eyJ1Ijoib2xlZ21hbGVua292IiwiYSI6ImNtNmV5cmEyczFibXAyaXFxa3FreDB4cnUifQ.3q_tNfVLtL69IxUBHJrPoA';
-
-            const map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: [30.5234, 50.4501], // Kyiv coordinates
+            // Initialize the map
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 50.4501, lng: 30.5234 }, // Kyiv coordinates
                 zoom: 6
             });
+
+            // Add markers
+            const userMarker = new google.maps.Marker({
+                position: { lat: 51.509865, lng: -0.118092 }, // Example: London
+                map,
+                title: "Your Location"
+            });
+
+            const borderMarker = new google.maps.Marker({
+                position: { lat: 49.8397, lng: 24.0297 }, // Lviv (near Ukraine border)
+                map,
+                title: "Ukraine Border"
+            });
+
+            // Optionally, add route or distance calculations here
         });
     </script>
 </body>
